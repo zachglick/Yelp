@@ -2,7 +2,7 @@
 
 **Name of your app** is a Yelp search app using the [Yelp API](http://www.yelp.com/developers/documentation/v2/search_api).
 
-Time spent: **2** hours spent in total
+Time spent: **4** hours spent in total
 
 ## User Stories
 
@@ -14,19 +14,19 @@ The following **required** functionality is completed:
 
 The following **optional** features are implemented:
 
-- [ ] Search results page
-   - [ ] Infinite scroll for restaurant results.
-   - [ ] Implement map view of restaurant results.
-- [ ] Implement the restaurant detail page.
+- [X] Search results page
+   - [ X Infinite scroll for restaurant results.
+   - [X] Implement map view of restaurant results.
+- [X] Implement the restaurant detail page.
 
 The following **additional** features are implemented:
 
-- [ ] List anything else that you can get done to improve the app functionality!
+- [X] Improved Color Scheme / Navigation Controller
 
 Please list two areas of the assignment you'd like to **discuss further with your peers** during the next class (examples include better ways to implement something, how to extend your app in certain ways, etc):
 
-1. 
-2. 
+1. What is the best order to display results in? Distance, Alphabetical Order, Relevance, something else?
+2. How did you implement infinite scroll? How many objects did you load at a time? Did you append them to your original list or replace the list?
 
 ## Video Walkthrough 
 
