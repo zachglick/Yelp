@@ -89,7 +89,15 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
         return cell;
     }
     
-
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        print("true")
+        
+        let cell = sender as! UITableViewCell
+        let indexPath = tableView.indexPathForCell(cell)
+        let business = filteredBusinesses![indexPath!.row]
+        let mapViewController = segue.destinationViewController as! MapViewController
+        mapViewController.business = business
+    }
     
     func searchBar(searchBar: UISearchBar, textDidChange searchText: String) {
         // When there is no text, filteredData is the same as the original data
