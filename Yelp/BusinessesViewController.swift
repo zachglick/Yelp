@@ -8,13 +8,18 @@
 
 import UIKit
 
-class BusinessesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate {
+class BusinessesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate, UIScrollViewDelegate {
 
     @IBOutlet weak var tableView: UITableView!
     
     var businesses: [Business]!
     var filteredBusinesses: [Business]!
     var searchBar: UISearchBar!
+    var isMoreDataLoading = false
+    var offsetIndex = 0
+    var loadingMoreView:InfiniteScrollActivityView?
+    
+
     
     
     override func viewDidLoad() {
@@ -26,7 +31,8 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
         tableView.estimatedRowHeight = 120
         
 
-        Business.searchWithTerm("Thai", completion: { (businesses: [Business]!, error: NSError!) -> Void in
+        Business.searchWithTerm("", offset : 0 ,limit: 15,completion: { (businesses: [Business]!, error: NSError!) -> Void in
+            self.offsetIndex += 15
             self.businesses = businesses
             self.filteredBusinesses = businesses
 
@@ -40,7 +46,18 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
         searchBar = UISearchBar()
         searchBar.sizeToFit()
         navigationItem.titleView = searchBar
+        navigationController!.navigationBar.barTintColor = UIColor.redColor()
         searchBar.delegate = self
+        
+        
+        let frame = CGRectMake(0, tableView.contentSize.height, tableView.bounds.size.width, InfiniteScrollActivityView.defaultHeight)
+        loadingMoreView = InfiniteScrollActivityView(frame: frame)
+        loadingMoreView!.hidden = true
+        tableView.addSubview(loadingMoreView!)
+        
+        var insets = tableView.contentInset;
+        insets.bottom += InfiniteScrollActivityView.defaultHeight;
+        tableView.contentInset = insets
 
 /* Example of Yelp search with more search options specified
         Business.searchWithTerm("Restaurants", sort: .Distance, categories: ["asianfusion", "burgers"], deals: true) { (businesses: [Business]!, error: NSError!) -> Void in
@@ -107,6 +124,52 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
+    
+
+    func scrollViewDidScroll(scrollView: UIScrollView) {
+            // Handle scroll behavior here
+        if (!isMoreDataLoading) {
+            
+            // Calculate the position of one screen length before the bottom of the results
+            let scrollViewContentHeight = tableView.contentSize.height
+            let scrollOffsetThreshold = scrollViewContentHeight - tableView.bounds.size.height
+            
+            // When the user has scrolled past the threshold, start requesting
+            if(scrollView.contentOffset.y > scrollOffsetThreshold && tableView.dragging) {
+                isMoreDataLoading = true
+                self.searchBar.text = ""
+                
+                
+                // Update position of loadingMoreView, and start loading indicator
+                let frame = CGRectMake(0, tableView.contentSize.height, tableView.bounds.size.width, InfiniteScrollActivityView.defaultHeight)
+                loadingMoreView?.frame = frame
+                loadingMoreView!.startAnimating()
+                
+                
+                Business.searchWithTerm("", offset : offsetIndex ,limit: 15,completion: { (deltabusinesses: [Business]!, error: NSError!) -> Void in
+                    self.offsetIndex += 15
+                    self.businesses.appendContentsOf(deltabusinesses)
+                    self.filteredBusinesses = self.businesses
+                    
+                    self.tableView.reloadData()
+                    
+                    for business in deltabusinesses {
+                        print(business.name!)
+                        print(business.address!)
+                    }
+                    self.isMoreDataLoading = false
+                    self.loadingMoreView!.stopAnimating()
+
+                })
+                
+                
+                // ... Code to load more results ...
+            }
+        }
+    }
+    
+    
+    
 
     /*
     // MARK: - Navigation
@@ -118,4 +181,41 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
     }
     */
 
+}
+
+
+class InfiniteScrollActivityView: UIView {
+    var activityIndicatorView: UIActivityIndicatorView = UIActivityIndicatorView()
+    static let defaultHeight:CGFloat = 60.0
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+        setupActivityIndicator()
+    }
+    
+    override init(frame aRect: CGRect) {
+        super.init(frame: aRect)
+        setupActivityIndicator()
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        activityIndicatorView.center = CGPointMake(self.bounds.size.width/2, self.bounds.size.height/2)
+    }
+    
+    func setupActivityIndicator() {
+        activityIndicatorView.activityIndicatorViewStyle = .Gray
+        activityIndicatorView.hidesWhenStopped = true
+        self.addSubview(activityIndicatorView)
+    }
+    
+    func stopAnimating() {
+        self.activityIndicatorView.stopAnimating()
+        self.hidden = true
+    }
+    
+    func startAnimating() {
+        self.hidden = false
+        self.activityIndicatorView.startAnimating()
+    }
 }
